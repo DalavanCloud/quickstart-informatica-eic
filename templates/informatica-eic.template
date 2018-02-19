@@ -1,35 +1,56 @@
 {
     "AWSTemplateFormatVersion": "2010-09-09",
-    "Description": "Informatica Enterprise Information Catalog. This template creates Amazon EC2 instances, Elastic IPs and related resources. You will be billed for the AWS resources used if you create a stack from this template. QS(5024)",
+    "Description": "Informatica Enterprise Data Catalog. This template creates Amazon EC2 instances, Elastic IPs and related resources. You will be billed for the AWS resources used if you create a stack from this template. QS(5024)",
     "Parameters": {
         "KeyName": {
             "Description": "Name of an existing Amazon EC2 keypair. You must specify this option to enable SSH access to Informatica domain and cluster instances",
-            "Type": "AWS::EC2::KeyPair::KeyName"
+            "Type": "AWS::EC2::KeyPair::KeyName",
+            "MinLength": "1",
+            "ConstraintDescription": "Specifying EC2 keypair is mandatory"
         },
         "VPCID": {
-            "Description": "ID of your existing VPC where you want to deploy Enterprise Information Catalog",
-            "Type": "AWS::EC2::VPC::Id"
+            "Description": "ID of your existing VPC where you want to deploy Enterprise Data Catalog",
+            "Type": "AWS::EC2::VPC::Id",
+            "MinLength": "1",
+            "ConstraintDescription":  "Specifying VPC ID is mandatory "
         },
         "InformaticaEICKeyS3Bucket": {
             "Type": "String",
-            "Description": "Name of the Amazon S3 bucket in your account that contains the Informatica Enterprise Information Catalog Key"
+            "Description": "Name of the Amazon S3 bucket in your account that contains the Informatica Enterprise Data Catalog Key",
+            "MinLength": "1",
+            "ConstraintDescription": "Informatica EIC Key S3 Bucket is mandatory"
         },
         "InformaticaEICKeyName": {
             "Type": "String",
-            "Description": "The Informatica Enterprise Information Catalog license key name. For example, <license key name> or <bucket sub folder/license key name>"
+            "Description": "The Informatica Enterprise Data Catalog license key name. For example, <license key name> or <bucket sub folder/license key name>",
+            "MinLength": "1",
+            "ConstraintDescription": "Informatica EIC Key Name is mandatory"
         },
         "InformaticaAdminUsername": {
             "Description": "Username to access Informatica Administrator",
-            "Type": "String"
+            "Type": "String",
+            "Default": "Administrator",
+            "MinLength": "1",
+            "ConstraintDescription": "Informatica Admin Username is mandatory"
         },
         "InformaticaAdminPassword": {
             "Description": "Password to access Informatica Administrator",
             "Type": "String",
-            "NoEcho": "True"
+            "NoEcho": "True",
+            "MinLength": "1",
+            "ConstraintDescription": "Informatica Admin Password is mandatory"
+        },
+        "ConfirmInformaticaAdminPassword": {
+            "Type": "String",
+            "NoEcho": "True",
+            "MinLength": "1",
+            "ConstraintDescription": "Confirm Password is mandatory "
         },
         "InformaticaServerSubnetID": {
             "Description": "Select a publicly accessible subnet ID for the Informatica domain",
-            "Type": "AWS::EC2::Subnet::Id"
+            "Type": "AWS::EC2::Subnet::Id",
+            "MinLength": "1",
+            "ConstraintDescription": "Specifying subnet ID is mandatory"
         },
         "InformaticaServerInstanceType": {
             "Type": "String",
@@ -42,16 +63,26 @@
         },
         "DBUser": {
             "Description": "Username for the database instance associated with Informatica domain and services (such as Model Repository Service, Data Integration Service, Content Management Service)",
-            "Type": "String",
-            "MinLength": "8",
-            "MaxLength": "18"
+            "MaxLength": "64",
+            "MinLength": "1",
+            "AllowedPattern": "[a-zA-Z][a-zA-Z0-9]*",
+            "ConstraintDescription": "Database Username should be alphanumeric and start with an alphabet only ",
+            "Type": "String"
         },
         "DBPassword": {
-            "Description": "Password for the database instance associated with Informatica domain and services (such as Model Repository Service, Data Integration Service, Content Management Service)",
-            "Type": "String",
-            "NoEcho": "True",
+            "Description": "Password for the database instance associated with Informatica domain and services (such as Model Repository Service, Data Integration Service, Content Management Service). Password should be at least 8 characters long and cannot contain \" @ and / ",
+            "MaxLength": "128",
             "MinLength": "8",
-            "MaxLength": "18"
+            "NoEcho": "True",
+            "AllowedPattern": "[^/\"@]*",
+            "ConstraintDescription": "Database Password should be atleast 8 characters and cannot contain \" @ and / ",
+            "Type": "String"
+        },
+        "ConfirmDBPassword": {
+            "NoEcho": "True",
+            "Type": "String",
+            "MinLength": "1",
+            "ConstraintDescription": "Confirm Password is mandatory "
         },
         "DBSubnetIDs": {
             "Description": "IDs of two private subnets in the selected VPC. These must be in different Availability Zones in the selected VPC",
@@ -117,6 +148,40 @@
                         ]
                     },
                     "AssertDescription": "All subnets must in the VPC"
+                }
+            ]
+        },
+        "matchDBPasswords": {
+            "Assertions": [
+                {
+                    "Assert": {
+                        "Fn::Equals": [
+                            {
+                                "Ref": "DBPassword"
+                            },
+                            {
+                                "Ref": "ConfirmDBPassword"
+                            }
+                        ]
+                    },
+                    "AssertDescription": "Passwords do not match"
+                }
+            ]
+        },
+        "matchAdministratorPasswords": {
+            "Assertions": [
+                {
+                    "Assert": {
+                        "Fn::Equals": [
+                            {
+                                "Ref": "InformaticaAdminPassword"
+                            },
+                            {
+                                "Ref": "ConfirmInformaticaAdminPassword"
+                            }
+                        ]
+                    },
+                    "AssertDescription": "Passwords do not match"
                 }
             ]
         }
@@ -209,16 +274,18 @@
                     },
                     "Parameters": [
                         "DBUser",
-                        "DBPassword"
+                        "DBPassword",
+                        "ConfirmDBPassword"
                     ]
                 },
                 {
                     "Label": {
-                        "default": "Informatica Enterprise Information Catalog Configuration"
+                        "default": "Informatica Enterprise Data Catalog Configuration"
                     },
                     "Parameters": [
                         "InformaticaAdminUsername",
                         "InformaticaAdminPassword",
+                        "ConfirmInformaticaAdminPassword",
                         "InformaticaEICKeyS3Bucket",
                         "InformaticaEICKeyName",
                         "ImportSampleData"
@@ -247,11 +314,14 @@
                 "InformaticaAdminPassword": {
                     "default": "Informatica Administrator Password"
                 },
+                "ConfirmInformaticaAdminPassword": {
+                    "default": "Confirm Password"
+                },
                 "InformaticaEICKeyS3Bucket": {
-                    "default": "Enterprise Information Catalog License Key Location"
+                    "default": "Enterprise Data Catalog License Key Location"
                 },
                 "InformaticaEICKeyName": {
-                    "default": "Enterprise Information Catalog License Key Name"
+                    "default": "Enterprise Data Catalog License Key Name"
                 },
                 "InformaticaServerSubnetID": {
                     "default": "Informatica Domain Subnet"
@@ -261,6 +331,9 @@
                 },
                 "DBPassword": {
                     "default": "Informatica Database Instance Password"
+                },
+                "ConfirmDBPassword": {
+                    "default": "Confirm Password"
                 },
                 "DBSubnetIDs": {
                     "default": "Informatica Database Subnets"
@@ -293,60 +366,60 @@
                 "INFAEICCLUSTERHVM": "Informatica Hadoop-Cluster Image for ICS"
             },
             "ap-northeast-1": {
-                "INFAEICADMINHVM": "ami-806838e7",
-                "INFAEICCLUSTERHVM": "ami-4d64262a"
+                "INFAEICADMINHVM": "ami-14374172",
+                "INFAEICCLUSTERHVM": "ami-6959320f"
             },
             "ap-northeast-2": {
-                "INFAEICADMINHVM": "ami-46805328",
-                "INFAEICCLUSTERHVM": "ami-1e875770"
+                "INFAEICADMINHVM": "ami-daa200b4",
+                "INFAEICCLUSTERHVM": "ami-5d04a733"
             },
             "ap-south-1": {
-                "INFAEICADMINHVM": "ami-3dbbcb52",
-                "INFAEICCLUSTERHVM": "ami-a5afdeca"
+                "INFAEICADMINHVM": "ami-48bfec27",
+                "INFAEICCLUSTERHVM": "ami-e1d7878e"
             },
             "ap-southeast-1": {
-                "INFAEICADMINHVM": "ami-ce8536ad",
-                "INFAEICCLUSTERHVM": "ami-f5a21596"
+                "INFAEICADMINHVM": "ami-19672665",
+                "INFAEICCLUSTERHVM": "ami-e581c599"
             },
             "ap-southeast-2": {
-                "INFAEICADMINHVM": "ami-598b893a",
-                "INFAEICCLUSTERHVM": "ami-ff2b2a9c"
+                "INFAEICADMINHVM": "ami-ac38c3ce",
+                "INFAEICCLUSTERHVM": "ami-ccf901ae"
             },
             "ca-central-1": {
-                "INFAEICADMINHVM": "ami-7f53ee1b",
-                "INFAEICCLUSTERHVM": "ami-eda91489"
+                "INFAEICADMINHVM": "ami-fa991d9e",
+                "INFAEICCLUSTERHVM": "ami-23ec6847"
             },
             "eu-central-1": {
-                "INFAEICADMINHVM": "ami-af71a5c0",
-                "INFAEICCLUSTERHVM": "ami-c867afa7"
+                "INFAEICADMINHVM": "ami-af5430c0",
+                "INFAEICCLUSTERHVM": "ami-08b42e67"
             },
             "eu-west-1": {
-                "INFAEICADMINHVM": "ami-957d48f3",
-                "INFAEICCLUSTERHVM": "ami-e8381f8e"
+                "INFAEICADMINHVM": "ami-97660eee",
+                "INFAEICCLUSTERHVM": "ami-409df039"
             },
             "eu-west-2": {
-                "INFAEICADMINHVM": "ami-14918470",
-                "INFAEICCLUSTERHVM": "ami-951500f1"
+                "INFAEICADMINHVM": "ami-f6bf5a91",
+                "INFAEICCLUSTERHVM": "ami-75fce611"
             },
             "sa-east-1": {
-                "INFAEICADMINHVM": "ami-144a2b78",
-                "INFAEICCLUSTERHVM": "ami-6712750b"
+                "INFAEICADMINHVM": "ami-7227691e",
+                "INFAEICCLUSTERHVM": "ami-2d581741"
             },
             "us-east-1": {
-                "INFAEICADMINHVM": "ami-6604a470",
-                "INFAEICCLUSTERHVM": "ami-5e925048"
+                "INFAEICADMINHVM": "ami-bce7eec6",
+                "INFAEICCLUSTERHVM": "ami-54a2a52e"
             },
             "us-east-2": {
-                "INFAEICADMINHVM": "ami-ce7753ab",
-                "INFAEICCLUSTERHVM": "ami-24f5d041"
+                "INFAEICADMINHVM": "ami-5e82b73b",
+                "INFAEICCLUSTERHVM": "ami-57f9cc32"
             },
             "us-west-1": {
-                "INFAEICADMINHVM": "ami-5782db37",
-                "INFAEICCLUSTERHVM": "ami-10b4e870"
+                "INFAEICADMINHVM": "ami-194c4279",
+                "INFAEICCLUSTERHVM": "ami-ed444b8d"
             },
             "us-west-2": {
-                "INFAEICADMINHVM": "ami-3aa7285a",
-                "INFAEICCLUSTERHVM": "ami-68a82c08"
+                "INFAEICADMINHVM": "ami-1b38bc63",
+                "INFAEICCLUSTERHVM": "ami-ac52e9d4"
             }
         },
         "ClusterSizeMapping": {
@@ -1007,9 +1080,6 @@
                                 "}\n",
                                 "\n",
                                 " sudo yum update -y aws-cfn-bootstrap || error_exit\n",
-                                "# Install the files and packages from the metadata\n",
-                                " sudo yum install -y python-devel-2.7.5-34.el7.x86_64 || error_exit\n",
-                                " echo 'exclude=python*' >> /etc/yum.conf \n",
                                 " sudo /home/ec2-user/Mercury_Setup/replaceHostname.sh || error_exit\n",
                                 "\n",
                                 " response=$(sudo /bin/systemctl status sshd.service || error_exit)\n",
@@ -1677,6 +1747,28 @@
                     ]
                 },
                 "Path": "/"
+            }
+        },
+        "CloudWatchPolicies": {
+            "Type": "AWS::IAM::ManagedPolicy",
+            "Properties": {
+                "PolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Action": [
+                                "logs: *"
+                            ],
+                            "Effect": "Allow",
+                            "Resource": "*"
+                        }
+                    ]
+                },
+                "Roles": [
+                    {
+                        "Ref": "InstanceRole"
+                    }
+                ]
             }
         },
         "RolePolicies": {
@@ -2397,6 +2489,39 @@
                                 "owner": "ec2-user",
                                 "group": "ec2-user"
                             },
+                            "/home/ec2-user/Mercury_Setup/reindexCatalogData.sh": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "#!/bin/bash\n",
+                                            "administratorName=",
+                                            {
+                                                "Ref": "InformaticaAdminUsername"
+                                            },
+                                            "\n",
+                                            "administratorPassword=",
+                                            {
+                                                "Ref": "InformaticaAdminPassword"
+                                            },
+                                            "\n",
+                                            "clusterSize=",
+                                            {
+                                                "Ref": "ICSClusterSize"
+                                            },
+                                            "\n",
+                                            "if [ $clusterSize != \"Small\" ] ; then \n",
+                                            "publicDnsName=$(curl http://169.254.169.254/latest/meta-data/public-hostname) \n",
+                                            "echo \"Performing the reindexing of Catalog Data\" >>/installation.log \n",
+                                            "curl -I -u $administratorName:$administratorPassword -X POST --header \"Content-Type: application/json\" --header \"Accept: application/json\" \"http://$publicDnsName:8085/access/1/catalog/data/search/index \" >> /installation.log 2>&1 \n",
+                                            "fi \n"
+                                        ]
+                                    ]
+                                },
+                                "mode": "000770",
+                                "owner": "ec2-user",
+                                "group": "ec2-user"
+                            },
                             "/home/ec2-user/Mercury_Setup/launchAnalystService.sh": {
                                 "content": {
                                     "Fn::Join": [
@@ -2413,13 +2538,13 @@
                                                 "Ref": "InformaticaAdminPassword"
                                             },
                                             "\n",
-                                            "echo /opt/informatica/isp/bin/infacmd.sh as createService -dn Domain -nn Node -sn Analyst_Service -un $administratorName -pd $administratorPassword -rs Model_Repository_Service -ds Data_Integration_Service -ffl /tmp -cs Catalog_Service -csau $administratorName -csap $administratorPassword -au $administratorName -ap $administratorPassword -bgefd /tmp -HttpPort 8089 >> /installation.log \n",
+                                            "echo \" /opt/informatica/isp/bin/infacmd.sh as createService -dn Domain -nn Node -sn Analyst_Service -un $administratorName -pd ****** -rs Model_Repository_Service -ds Data_Integration_Service -ffl /tmp -cs Catalog_Service -csau $administratorName -csap ****** -au $administratorName -ap ****** -bgefd /tmp -HttpPort 8089 \" >> /installation.log \n",
                                             "/opt/informatica/isp/bin/infacmd.sh as createService -dn Domain -nn Node -sn Analyst_Service -un $administratorName -pd $administratorPassword -rs Model_Repository_Service -ds Data_Integration_Service -ffl /tmp -cs Catalog_Service -csau $administratorName -csap $administratorPassword -au $administratorName -ap $administratorPassword -bgefd /tmp -HttpPort 8089 >> /installation.log 2>&1 \n",
-                                            "echo /opt/informatica/isp/bin/infacmd.sh assignLicense -dn Domain -un $administratorName -pd $administratorPassword -ln License -sn Analyst_Service >> /installation.log \n",
+                                            "echo \" /opt/informatica/isp/bin/infacmd.sh assignLicense -dn Domain -un $administratorName -pd ****** -ln License -sn Analyst_Service \" >> /installation.log \n",
                                             "/opt/informatica/isp/bin/infacmd.sh assignLicense -dn Domain -un $administratorName -pd $administratorPassword -ln License -sn Analyst_Service >> /installation.log 2>&1 \n",
-                                            "echo /opt/informatica/isp/bin/infacmd.sh as updateServiceOptions -dn Domain -sn Analyst_Service -un $administratorName -pd $administratorPassword  -o BGExport.BGPermanentAttachmentFileLocation=/tmp >> /installation.log \n",
+                                            "echo \" /opt/informatica/isp/bin/infacmd.sh as updateServiceOptions -dn Domain -sn Analyst_Service -un $administratorName -pd ******  -o BGExport.BGPermanentAttachmentFileLocation=/tmp \" >> /installation.log \n",
                                             "/opt/informatica/isp/bin/infacmd.sh as updateServiceOptions -dn Domain -sn Analyst_Service -un $administratorName -pd $administratorPassword  -o BGExport.BGPermanentAttachmentFileLocation=/tmp >> /installation.log 2>&1 \n",
-                                            "echo /opt/informatica/isp/bin/infacmd.sh enableService -dn Domain -un $administratorName -pd $administratorPassword -sn Analyst_Service >> /installation.log \n",
+                                            "echo \" /opt/informatica/isp/bin/infacmd.sh enableService -dn Domain -un $administratorName -pd ****** -sn Analyst_Service \" >> /installation.log \n",
                                             "/opt/informatica/isp/bin/infacmd.sh enableService -dn Domain -un $administratorName -pd $administratorPassword -sn Analyst_Service >> /installation.log 2>&1 \n"
                                         ]
                                     ]
@@ -2435,6 +2560,7 @@
                                         [
                                             "#!/bin/bash\n",
                                             "rm -f /home/ec2-user/Mercury_Setup/config_template.xml \n",
+                                            "rm -f /home/ec2-user/Mercury_Setup/reindexCatalogData.sh \n",
                                             "rm -f /home/ec2-user/Mercury_Setup/launchAnalystService.sh \n",
                                             "rm -f /home/ec2-user/Mercury_Setup/replaceValues.sh \n",
                                             "rm -f /home/ec2-user/Mercury_Setup/replaceHostname.sh \n"
@@ -2509,10 +2635,13 @@
                             "04_MercurySetup": {
                                 "command": "sudo java -jar /home/ec2-user/Mercury_Setup/mercury_setup.jar -cf /home/ec2-user/Mercury_Setup/config_template.xml -s -uei"
                             },
-                            "05_AnalystServiceSetup": {
+                            "05_ReindexCatalogData": {
+                                "command": "sudo /home/ec2-user/Mercury_Setup/reindexCatalogData.sh"
+                            },
+                            "06_AnalystServiceSetup": {
                                 "command": "sudo /home/ec2-user/Mercury_Setup/launchAnalystService.sh"
                             },
-                            "06_cleanupScripts": {
+                            "07_cleanupScripts": {
                                 "command": "sudo /home/ec2-user/Mercury_Setup/cleanupScripts.sh"
                             }
                         }
@@ -2570,6 +2699,14 @@
                             [
                                 "#!/bin/bash\n",
                                 "sudo yum update -y aws-cfn-bootstrap\n",
+                                "sudo wget -O /home/ec2-user/Mercury_Setup/awslogs-agent-setup.py https: //s3.amazonaws.com/aws-cloudwatch/downloads/latest/awslogs-agent-setup.py \n",
+                                "sudo chmod +x /home/ec2-user/Mercury_Setup/awslogs-agent-setup.py \n",
+                                "sudo python /home/ec2-user/Mercury_Setup/awslogs-agent-setup.py -n -r ",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                " -c https: //s3.amazonaws.com/eic-cloudwatch-configuration/awsCloudwatchLogs.conf \n",
+                                "service awslogs start \n",
                                 "# Install the files and packages from the metadata\n",
                                 "/opt/aws/bin/cfn-init -v ",
                                 "         --stack ",

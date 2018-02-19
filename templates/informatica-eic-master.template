@@ -1,6 +1,6 @@
 {
     "AWSTemplateFormatVersion": "2010-09-09",
-    "Description": "This template creates a VPC infrastructure with a deployment of Informatica Enterprise Information Catalog. It will deploy a bastion and managed NAT gateways or NAT instances into the public subnet for each Availability Zone. **WARNING** This template creates Amazon EC2 instance and related resources. You will be billed for the AWS resources used if you create a stack from this template.",
+    "Description": "This template creates a VPC infrastructure with a deployment of Informatica Enterprise Data Catalog. It will deploy a bastion and managed NAT gateways or NAT instances into the public subnet for each Availability Zone. **WARNING** This template creates Amazon EC2 instance and related resources. You will be billed for the AWS resources used if you create a stack from this template.",
     "Metadata": {
         "AWS::CloudFormation::Interface": {
             "ParameterGroups": [
@@ -34,16 +34,18 @@
                     },
                     "Parameters": [
                         "DBUser",
-                        "DBPassword"
+                        "DBPassword",
+                        "ConfirmDBPassword"
                     ]
                 },
                 {
                     "Label": {
-                        "default": "Informatica Enterprise Information Catalog Configuration"
+                        "default": "Informatica Enterprise Data Catalog Configuration"
                     },
                     "Parameters": [
                         "InformaticaAdminUsername",
                         "InformaticaAdminPassword",
+                        "ConfirmInformaticaAdminPassword",
                         "InformaticaEICKeyS3Bucket",
                         "InformaticaEICKeyName",
                         "ImportSampleData"
@@ -69,20 +71,26 @@
                 "DBUser": {
                     "default": "Informatica Database Instance Username"
                 },
+                "ConfirmDBPassword": {
+                    "default": "Confirm Password"
+                },
                 "ICSClusterSize": {
                     "default": "Informatica Embedded Cluster Size"
                 },
                 "InformaticaAdminPassword": {
                     "default": "Informatica Administrator Password"
                 },
+                "ConfirmInformaticaAdminPassword": {
+                    "default": "Confirm Password"
+                },
                 "InformaticaAdminUsername": {
                     "default": "Informatica Administrator Username"
                 },
                 "InformaticaEICKeyName": {
-                    "default": "Enterprise Information Catalog License Key Name"
+                    "default": "Enterprise Data Catalog License Key Name"
                 },
                 "InformaticaEICKeyS3Bucket": {
-                    "default": "Enterprise Information Catalog License Key Location"
+                    "default": "Enterprise Data Catalog License Key Location"
                 },
                 "ImportSampleData": {
                     "default": "Import Sample Content"
@@ -126,16 +134,26 @@
             "Type": "List<AWS::EC2::AvailabilityZone::Name>"
         },
         "DBPassword": {
-            "Description": "Password for the database instance associated with Informatica domain and services (such as Model Repository Service, Data Integration Service, Content Management Service)",
-            "MaxLength": "18",
+            "Description": "Password for the database instance associated with Informatica domain and services (such as Model Repository Service, Data Integration Service, Content Management Service). Password should be at least 8 characters long and cannot contain \" @ and / ",
+            "MaxLength": "128",
             "MinLength": "8",
             "NoEcho": "True",
+            "AllowedPattern": "[^/\"@]*",
+            "ConstraintDescription": "Database Password should be atleast 8 characters and cannot contain \" @ and /",
             "Type": "String"
+        },
+        "ConfirmDBPassword": {
+            "NoEcho": "True",
+            "Type": "String",
+            "MinLength": "1",
+            "ConstraintDescription": "Confirm Password is mandatory "
         },
         "DBUser": {
             "Description": "Username for the database instance associated with Informatica domain and services (such as Model Repository Service, Data Integration Service, Content Management Service)",
-            "MaxLength": "18",
-            "MinLength": "8",
+            "MaxLength": "64",
+            "MinLength": "1",
+            "AllowedPattern": "[a-zA-Z][a-zA-Z0-9]*",
+            "ConstraintDescription": "Database Username should be alphanumeric and start with an alphabet only ",
             "Type": "String"
         },
         "ICSClusterSize": {
@@ -151,19 +169,34 @@
         "InformaticaAdminPassword": {
             "Description": "Password to access Informatica Administrator",
             "Type": "String",
-            "NoEcho": "True"
+            "NoEcho": "True",
+            "MinLength": "1",
+            "ConstraintDescription": "Informatica Admin Password is mandatory"
+        },
+        "ConfirmInformaticaAdminPassword": {
+            "Type": "String",
+            "NoEcho": "True",
+            "MinLength": "1",
+            "ConstraintDescription": "Confirm Password is mandatory"
         },
         "InformaticaAdminUsername": {
             "Description": "Username to access Informatica Administrator",
-            "Type": "String"
+            "Type": "String",
+            "Default": "Administrator",
+            "MinLength": "1",
+            "ConstraintDescription": "Informatica Admin Username is mandatory"
         },
         "InformaticaEICKeyName": {
             "Type": "String",
-            "Description": "The Informatica Enterprise Information Catalog license key name. For example, <license key name> or <bucket sub folder/license key name>"
+            "Description": "The Informatica Enterprise Data Catalog license key name. For example, <license key name> or <bucket sub folder/license key name>",
+            "MinLength": "1",
+            "ConstraintDescription": "Informatica EIC Key Name is mandatory"
         },
         "InformaticaEICKeyS3Bucket": {
             "Type": "String",
-            "Description": "Name of the Amazon S3 bucket in your account that contains the Informatica Enterprise Information Catalog Key"
+            "Description": "Name of the Amazon S3 bucket in your account that contains the Informatica Enterprise Data Catalog Key",
+            "MinLength": "1",
+            "ConstraintDescription": "Informatica EIC Key S3 bucket is mandatory"
         },
         "InformaticaServerInstanceType": {
             "Type": "String",
@@ -185,7 +218,9 @@
         },
         "KeyName": {
             "Description": "Name of an existing Amazon EC2 keypair. You must specify this option to enable SSH access to Informatica domain and cluster instances",
-            "Type": "AWS::EC2::KeyPair::KeyName"
+            "Type": "AWS::EC2::KeyPair::KeyName",
+            "MinLength": "1",
+            "ConstraintDescription": "Specifying EC2 keypair is mandatory"
         },
         "PrivateSubnet1CIDR": {
             "AllowedPattern": "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/(1[6-9]|2[0-8]))$",
@@ -243,6 +278,42 @@
             "Default": "10.0.0.0/16",
             "Description": "CIDR Block for the VPC",
             "Type": "String"
+        }
+    },
+    "Rules": {
+        "matchDBPasswords": {
+            "Assertions":[
+                {
+                    "Assert": {
+                        "Fn::Equals":[
+                            {
+                                "Ref": "DBPassword"
+                            },
+                            {
+                                "Ref": "ConfirmDBPassword"
+                            }
+                        ]
+                    },
+                    "AssertDescription": "Passwords do not match"
+                }
+            ]
+        },
+        "matchAdministratorPasswords": {
+            "Assertions":[
+                {
+                    "Assert": {
+                        "Fn::Equals":[
+                            {
+                                "Ref": "InformaticaAdminPassword"
+                            },
+                            {
+                                "Ref": "ConfirmInformaticaAdminPassword"
+                            }
+                        ]
+                    },
+                    "AssertDescription": "Passwords do not match"
+                }
+            ]
         }
     },
     "Mappings": {
@@ -398,6 +469,9 @@
                     "DBPassword": {
                         "Ref": "DBPassword"
                     },
+                    "ConfirmDBPassword": {
+                        "Ref": "ConfirmDBPassword"
+                    },
                     "DBSubnetIDs": {
                         "Fn::Join": [
                             ",",
@@ -425,6 +499,9 @@
                     },
                     "InformaticaAdminPassword": {
                         "Ref": "InformaticaAdminPassword"
+                    },
+                    "ConfirmInformaticaAdminPassword": {
+                        "Ref": "ConfirmInformaticaAdminPassword"
                     },
                     "InformaticaEICKeyS3Bucket": {
                         "Ref": "InformaticaEICKeyS3Bucket"
