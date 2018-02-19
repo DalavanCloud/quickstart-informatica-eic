@@ -143,6 +143,7 @@
             "Type": "String"
         },
         "ConfirmDBPassword": {
+            "Description": "Confirm the password for the database instance",
             "NoEcho": "True",
             "Type": "String",
             "MinLength": "1",
@@ -174,6 +175,7 @@
             "ConstraintDescription": "Informatica Admin Password is mandatory"
         },
         "ConfirmInformaticaAdminPassword": {
+            "Description": "Confirm the password for Informatica Administrator",
             "Type": "String",
             "NoEcho": "True",
             "MinLength": "1",

@@ -5,7 +5,11 @@
     },
     {
         "ParameterKey": "DBPassword",
-        "ParameterValue": "$[alfred_genpass_18]"
+        "ParameterValue": "t51e2xpd_U5G-gl4k_8"
+    },
+    {
+        "ParameterKey": "DBPassword",
+        "ParameterValue": "t51e2xpd_U5G-gl4k_8"
     },
     {
         "ParameterKey": "DBUser",
@@ -25,7 +29,11 @@
     },
     {
         "ParameterKey": "InformaticaAdminPassword",
-        "ParameterValue": "$[alfred_genpass_18]"
+        "ParameterValue": "b230Ata_m6u-djRJ_3"
+    },
+    {
+        "ParameterKey": "ConfirmInformaticaAdminPassword",
+        "ParameterValue": "b230Ata_m6u-djRJ_3"
     },
     {
         "ParameterKey": "InformaticaAdminUsername",
