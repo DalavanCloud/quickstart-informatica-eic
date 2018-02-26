@@ -192,13 +192,13 @@
             "Type": "String",
             "Description": "The Informatica Enterprise Data Catalog license key name. For example, <license key name> or <bucket sub folder/license key name>",
             "MinLength": "1",
-            "ConstraintDescription": "Informatica EIC Key Name is mandatory"
+            "ConstraintDescription": "Informatica EDC Key Name is mandatory"
         },
         "InformaticaEICKeyS3Bucket": {
             "Type": "String",
             "Description": "Name of the Amazon S3 bucket in your account that contains the Informatica Enterprise Data Catalog Key",
             "MinLength": "1",
-            "ConstraintDescription": "Informatica EIC Key S3 bucket is mandatory"
+            "ConstraintDescription": "Informatica EDC Key S3 bucket is mandatory"
         },
         "InformaticaServerInstanceType": {
             "Type": "String",

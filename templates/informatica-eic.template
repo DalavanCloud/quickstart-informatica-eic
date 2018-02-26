@@ -18,13 +18,13 @@
             "Type": "String",
             "Description": "Name of the Amazon S3 bucket in your account that contains the Informatica Enterprise Data Catalog Key",
             "MinLength": "1",
-            "ConstraintDescription": "Informatica EIC Key S3 Bucket is mandatory"
+            "ConstraintDescription": "Informatica EDC Key S3 Bucket is mandatory"
         },
         "InformaticaEICKeyName": {
             "Type": "String",
             "Description": "The Informatica Enterprise Data Catalog license key name. For example, <license key name> or <bucket sub folder/license key name>",
             "MinLength": "1",
-            "ConstraintDescription": "Informatica EIC Key Name is mandatory"
+            "ConstraintDescription": "Informatica EDC Key Name is mandatory"
         },
         "InformaticaAdminUsername": {
             "Description": "Username to access Informatica Administrator",
@@ -903,8 +903,6 @@
                                 "\n",
                                 " sudo yum update -y aws-cfn-bootstrap || error_exit\n",
                                 "# Install the files and packages from the metadata\n",
-                                " sudo yum install -y python-devel-2.7.5-34.el7.x86_64 || error_exit\n",
-                                " echo 'exclude=python*' >> /etc/yum.conf \n",
                                 " sudo /home/ec2-user/Mercury_Setup/replaceHostname.sh || error_exit\n",
                                 "\n",
                                 " response=$(sudo /bin/systemctl status sshd.service || error_exit)\n",
@@ -988,8 +986,6 @@
                                 "\n",
                                 " sudo yum update -y aws-cfn-bootstrap || error_exit\n",
                                 "# Install the files and packages from the metadata\n",
-                                " sudo yum install -y python-devel-2.7.5-34.el7.x86_64 || error_exit\n",
-                                " echo 'exclude=python*' >> /etc/yum.conf \n",
                                 " sudo /home/ec2-user/Mercury_Setup/replaceHostname.sh || error_exit\n",
                                 "\n",
                                 " response=$(sudo /bin/systemctl status sshd.service || error_exit)\n",
@@ -1171,8 +1167,6 @@
                                 "\n",
                                 " sudo yum update -y aws-cfn-bootstrap || error_exit\n",
                                 "# Install the files and packages from the metadata\n",
-                                " sudo yum install -y python-devel-2.7.5-34.el7.x86_64 || error_exit\n",
-                                " echo 'exclude=python*' >> /etc/yum.conf \n",
                                 " sudo /home/ec2-user/Mercury_Setup/replaceHostname.sh || error_exit\n",
                                 "\n",
                                 " response=$(sudo /bin/systemctl status sshd.service || error_exit)\n",
@@ -1264,8 +1258,6 @@
                                 "\n",
                                 " sudo yum update -y aws-cfn-bootstrap || error_exit\n",
                                 "# Install the files and packages from the metadata\n",
-                                " sudo yum install -y python-devel-2.7.5-34.el7.x86_64 || error_exit\n",
-                                " echo 'exclude=python*' >> /etc/yum.conf \n",
                                 " sudo /home/ec2-user/Mercury_Setup/replaceHostname.sh || error_exit\n",
                                 "\n",
                                 " response=$(sudo /bin/systemctl status sshd.service || error_exit)\n",
@@ -1357,8 +1349,6 @@
                                 "\n",
                                 " sudo yum update -y aws-cfn-bootstrap || error_exit\n",
                                 "# Install the files and packages from the metadata\n",
-                                " sudo yum install -y python-devel-2.7.5-34.el7.x86_64 || error_exit\n",
-                                " echo 'exclude=python*' >> /etc/yum.conf \n",
                                 " sudo /home/ec2-user/Mercury_Setup/replaceHostname.sh || error_exit\n",
                                 "\n",
                                 " response=$(sudo /bin/systemctl status sshd.service || error_exit)\n",
@@ -1450,8 +1440,6 @@
                                 "\n",
                                 " sudo yum update -y aws-cfn-bootstrap || error_exit\n",
                                 "# Install the files and packages from the metadata\n",
-                                " sudo yum install -y python-devel-2.7.5-34.el7.x86_64 || error_exit\n",
-                                " echo 'exclude=python*' >> /etc/yum.conf \n",
                                 " sudo /home/ec2-user/Mercury_Setup/replaceHostname.sh || error_exit\n",
                                 "\n",
                                 " response=$(sudo /bin/systemctl status sshd.service || error_exit)\n",
@@ -1757,7 +1745,7 @@
                     "Statement": [
                         {
                             "Action": [
-                                "logs: *"
+                                "logs:*"
                             ],
                             "Effect": "Allow",
                             "Resource": "*"
@@ -2699,13 +2687,13 @@
                             [
                                 "#!/bin/bash\n",
                                 "sudo yum update -y aws-cfn-bootstrap\n",
-                                "sudo wget -O /home/ec2-user/Mercury_Setup/awslogs-agent-setup.py https: //s3.amazonaws.com/aws-cloudwatch/downloads/latest/awslogs-agent-setup.py \n",
+                                "sudo wget -O /home/ec2-user/Mercury_Setup/awslogs-agent-setup.py https://s3.amazonaws.com/aws-cloudwatch/downloads/latest/awslogs-agent-setup.py \n",
                                 "sudo chmod +x /home/ec2-user/Mercury_Setup/awslogs-agent-setup.py \n",
                                 "sudo python /home/ec2-user/Mercury_Setup/awslogs-agent-setup.py -n -r ",
                                 {
                                     "Ref": "AWS::Region"
                                 },
-                                " -c https: //s3.amazonaws.com/eic-cloudwatch-configuration/awsCloudwatchLogs.conf \n",
+                                " -c https://s3.amazonaws.com/eic-cloudwatch-configuration/awsCloudwatchLogs.conf \n",
                                 "service awslogs start \n",
                                 "# Install the files and packages from the metadata\n",
                                 "/opt/aws/bin/cfn-init -v ",
